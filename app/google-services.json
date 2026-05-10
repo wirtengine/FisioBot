@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "182854886047",
+    "firebase_url": "https://fisiobotkids-default-rtdb.firebaseio.com",
+    "project_id": "fisiobotkids",
+    "storage_bucket": "fisiobotkids.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:182854886047:android:a3bf10d602a1030d60b8aa",
+        "android_client_info": {
+          "package_name": "com.example.fisiobotkids"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxm9p0qOTyY220iPGX0iVq3-zIDTEmIek"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
