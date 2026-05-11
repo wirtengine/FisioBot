@@ -23,6 +23,7 @@ class FirebaseFisioBotRepository : FisioBotRepository {
                 val data = snapshot.getValue(SensorData::class.java)
                 if (data != null) trySend(data)
             }
+
             override fun onCancelled(error: DatabaseError) {
                 close(error.toException())
             }
@@ -37,6 +38,7 @@ class FirebaseFisioBotRepository : FisioBotRepository {
                 val state = snapshot.getValue(RobotState::class.java)
                 if (state != null) trySend(state)
             }
+
             override fun onCancelled(error: DatabaseError) {
                 close(error.toException())
             }
@@ -51,11 +53,12 @@ class FirebaseFisioBotRepository : FisioBotRepository {
     // Obtener lista de niños del doctor actual
     override fun getChildrenList(): Flow<List<Child>> = callbackFlow {
         val ref = pacientesRef()
+
         if (ref == null) {
-            // Cerramos el flujo limpiamente en lugar de lanzar excepción
             close()
             return@callbackFlow
         }
+
         val listener = ref.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val children = snapshot.children.map { snap ->
@@ -67,33 +70,42 @@ class FirebaseFisioBotRepository : FisioBotRepository {
                         doctorUid = doctorUid
                     )
                 }
+
                 trySend(children)
             }
+
             override fun onCancelled(error: DatabaseError) {
                 close(error.toException())
             }
         })
+
         awaitClose { ref.removeEventListener(listener) }
     }
 
     // Agregar un niño al doctor actual, guardando su perfil
     override suspend fun addChild(childId: String, nombre: String, edad: Int) {
-        val ref = pacientesRef() ?: throw IllegalStateException("Doctor no autenticado")
+        val ref = pacientesRef()
+            ?: throw IllegalStateException("Doctor no autenticado")
+
         val codigo = (1000..9999).random().toString()
+
         val childData = mapOf(
             "nombre" to nombre,
             "edad" to edad,
             "codigo" to codigo,
             "fechaRegistro" to ServerValue.TIMESTAMP
         )
-        ref.child(childId).setValue(childData).addOnSuccessListener {
-            Log.d("FirebaseRepo", "Niño $childId registrado correctamente")
-        }.addOnFailureListener { e ->
-            Log.e("FirebaseRepo", "Error al registrar niño", e)
-        }
+
+        ref.child(childId).setValue(childData)
+            .addOnSuccessListener {
+                Log.d("FirebaseRepo", "Niño $childId registrado correctamente")
+            }
+            .addOnFailureListener { e ->
+                Log.e("FirebaseRepo", "Error al registrar niño", e)
+            }
     }
 
-    // Buscar childId por código (para acceso sin login, si se desea conservar)
+    // Buscar childId por código
     override suspend fun getChildIdByCode(code: String): String? {
         return try {
             val snap = db.getReference("codigos/$code").get().await()
@@ -101,5 +113,20 @@ class FirebaseFisioBotRepository : FisioBotRepository {
         } catch (e: Exception) {
             null
         }
+    }
+
+    // Progreso del niño (niveles)
+    override suspend fun getChildProgress(childId: String): ChildProgress {
+        val snap = db.getReference("progress/$childId").get().await()
+
+        return snap.getValue(ChildProgress::class.java)
+            ?: ChildProgress()
+    }
+
+    override suspend fun saveChildProgress(
+        childId: String,
+        progress: ChildProgress
+    ) {
+        db.getReference("progress/$childId").setValue(progress)
     }
 }
